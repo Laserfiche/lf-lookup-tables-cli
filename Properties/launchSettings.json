@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "lf-sample-repository-api-dotnet-srv": {
+      "commandName": "Project",
+      "commandLineArgs": "ExportLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+    }
+  },
+  //"commandLineArgs": "-?"
+  //"commandLineArgs": "ExportLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+}
