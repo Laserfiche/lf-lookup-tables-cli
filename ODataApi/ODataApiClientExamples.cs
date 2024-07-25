@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Laserfiche.Api.ODataApi
@@ -19,52 +18,14 @@ namespace Laserfiche.Api.ODataApi
         const string ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name = "ALL_DATA_TYPES_TABLE_SAMPLE";
 
 
-        public static async Task ExecuteAsync(ApiClientConfiguration config)
+       
+
+        public static async Task<IList<string>> PrintLookupTableNamesAsync(ODataApiClient oDataApiClient)
         {
-            try
-            {
-                string scope = "table.Read table.Write project/Global";
-
-                // Create the http client
-                ODataApiClient oDataApiClient = ODataApiClient.CreateFromServicePrincipalKey(config.ServicePrincipalKey, config.AccessKey, scope);
-
-                // Get lookup table names
-                await PrintLookupTableNamesAsync(oDataApiClient);
-
-                // Get lookup tables definitions
-                Dictionary<string, Entity> entityDictionary = await oDataApiClient.GetTableMetadataAsync();
-
-                // Get ALL_DATA_TYPES_TABLE_SAMPLE lookup table entity definition
-                if (!entityDictionary.TryGetValue(ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name, out Entity allDataTypesEntity))
-                {
-                    throw new Exception($"Lookup table '{ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name}' not found. Please go to 'Process Automation / Data Management' and create a lookup table named '{ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name}' using '{ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name}.csv' file in this project.");
-                };
-
-
-
-                // Export ALL_DATA_TYPES_TABLE_SAMPLE lookup table as csv.
-                string csv = await ExportLookupTableCsvAsync(oDataApiClient, allDataTypesEntity);
-
-                // Replace ALL_DATA_TYPES_TABLE_SAMPLE lookup table as csv.
-                var csvWithAdditionalRow = csv + csv.Trim().Split(Environment.NewLine).Last(); //Append a duplicate of the last row
-                var taskId = await ReplaceLookupTableAsync(oDataApiClient, allDataTypesEntity, csvWithAdditionalRow);
-
-                // Monitor replace operation task progress
-                await MonitorReplaceLookupTableTaskAsync(oDataApiClient, taskId);
-            }
-            catch (Exception e)
-            {
-                Console.Error.Write(e);
-            }
-        }
-
-        private static async Task<IList<string>> PrintLookupTableNamesAsync(ODataApiClient oDataApiClient)
-        {
-            Console.WriteLine($"\nRetrieving Lookup tables:");
             var tableNames = await oDataApiClient.GetLookupTableNamesAsync();
             foreach (var tableName in tableNames)
             {
-                Console.WriteLine($"  - {tableName}");
+                Console.WriteLine(tableName);
             }
             return tableNames;
         }

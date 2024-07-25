@@ -1,10 +1,15 @@
 {
   "profiles": {
-    "lf-sample-repository-api-dotnet-srv": {
+    "Command-Help": {
       "commandName": "Project",
-      "commandLineArgs": "ExportLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+      "commandLineArgs": "GetLookupTables -?"
+    },
+    "Command-GetLookupTables": {
+      "commandName": "Project",
+      "commandLineArgs": "GetLookupTables --projectScope=\"project/Global\" "
+    },
+    "Command-ExportLookupTableAsCSV": {
+      "commandName": "Project",
+      "commandLineArgs": "ExportLookupTableAsCSV --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
     }
-  },
-  //"commandLineArgs": "-?"
-  //"commandLineArgs": "ExportLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
-}
+  }

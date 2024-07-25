@@ -3,3 +3,4 @@
 /nuget
 *.env
 .vs
+*.user
