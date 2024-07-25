@@ -18,47 +18,6 @@ namespace Laserfiche.Api.ODataApi
         const string ALL_DATA_TYPES_TABLE_SAMPLE_lookup_table_name = "ALL_DATA_TYPES_TABLE_SAMPLE";
 
 
-       
-
-        public static async Task<IList<string>> PrintLookupTableNamesAsync(ODataApiClient oDataApiClient)
-        {
-            var tableNames = await oDataApiClient.GetLookupTableNamesAsync();
-            foreach (var tableName in tableNames)
-            {
-                Console.WriteLine(tableName);
-            }
-            return tableNames;
-        }
-
-        public static async Task<string> ExportLookupTableCsvAsync(
-            ODataApiClient oDataApiClient,
-            Entity allDataTypesEntity)
-        {
-            Console.WriteLine($"\nExporting Lookup table {allDataTypesEntity.Name}...");
-
-            // Get ALL_DATA_TYPES_TABLE_SAMPLE lookup table columns names without the '_key' column.
-            IList<string> columnNames = allDataTypesEntity.Properties.Select(r => r.Name).Where(r => r != allDataTypesEntity.KeyName).ToList();
-
-            int rowCount = 0;
-            var tableCsv = new StringBuilder();
-            string columnsHeaders = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, columnNames);
-            tableCsv.AppendLine(columnsHeaders);
-            Action<JsonElement> processTableRow = (tableRow) =>
-            {
-                rowCount++;
-                var rowCsv = tableRow.ToCsv();
-                if (!string.IsNullOrWhiteSpace(rowCsv))
-                    tableCsv.AppendLine(rowCsv);
-            };
-            await oDataApiClient.QueryLookupTableAsync(allDataTypesEntity.Name, processTableRow,
-                new ODataQueryParameters { Select = columnsHeaders });
-            var csv = tableCsv.ToString();
-
-            Console.WriteLine(csv);
-            Console.WriteLine($"\nDone Exporting Lookup table {allDataTypesEntity.Name} with {rowCount} rows.");
-            return csv;
-        }
-
         private static async Task<string> ReplaceLookupTableAsync(
            ODataApiClient oDataApiClient,
            Entity allDataTypesEntity,
