@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,7 +104,7 @@ namespace Laserfiche.Api.ODataApi
         /// <exception cref="ArgumentNullException"></exception>
         public async Task QueryLookupTableAsync(
            string tableName,
-           Action<JsonElement> processTableRow,
+           Func<JsonElement, Task> processTableRow,
            ODataQueryParameters queryParameters,
            CancellationToken cancel = default)
         {
@@ -124,7 +123,7 @@ namespace Laserfiche.Api.ODataApi
                 {
                     foreach (var item in content.RootElement.GetProperty("value").EnumerateArray())
                     {
-                        processTableRow(item);
+                        await processTableRow(item);
                     }
                 };
 
@@ -158,46 +157,6 @@ namespace Laserfiche.Api.ODataApi
                 url = (new ODataQueryParameters() { Select = select }).AppendQueryString(url);
 
             var httpResponse = await _httpClient.GetAsync(url, cancel);
-            httpResponse.EnsureSuccessStatusCode();
-            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
-            return content.RootElement;
-        }
-
-        public async Task<bool> DeleteTableRowAsync(
-            string tableName,
-            string key,
-            CancellationToken cancel = default)
-        {
-            if (string.IsNullOrWhiteSpace(tableName))
-                throw new ArgumentNullException(nameof(tableName));
-
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
-
-            string url = $"table/{Uri.EscapeDataString(tableName)}('{Uri.EscapeDataString(key)}')";
-
-            var httpResponse = await _httpClient.DeleteAsync(url, cancel);
-            httpResponse.EnsureSuccessStatusCode();
-            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
-            return httpResponse.StatusCode == System.Net.HttpStatusCode.OK;
-        }
-
-        public async Task<JsonElement> UpsertTableRowAsync(
-            string tableName,
-            string key,
-            JsonElement row,
-            CancellationToken cancel = default)
-        {
-            if (string.IsNullOrWhiteSpace(tableName))
-                throw new ArgumentNullException(nameof(tableName));
-
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
-
-            string url = $"table/{Uri.EscapeDataString(tableName)}('{Uri.EscapeDataString(key)}')";
-            var jsonTxt = JsonSerializer.Serialize(row);
-            var requestContent = new StringContent(jsonTxt, Encoding.UTF8, "application/json");
-            var httpResponse = await _httpClient.PatchAsync(url, requestContent, cancel);
             httpResponse.EnsureSuccessStatusCode();
             JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
             return content.RootElement;

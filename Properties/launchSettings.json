@@ -12,9 +12,10 @@
       "commandName": "Project",
       "commandLineArgs": "GetLookupTables --projectScope=\"project/Global\" "
     },
-    "Command-ExportLookupTableAsCSV": {
+    "Command-QueryLookupTable": {
       "commandName": "Project",
-      "commandLineArgs": "ExportLookupTableAsCSV --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+      "commandLineArgs": "QueryLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" ",
+      //"commandLineArgs": "QueryLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
     }
   }
 }

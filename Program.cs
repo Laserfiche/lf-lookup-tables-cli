@@ -26,25 +26,30 @@ namespace Laserfiche.Api
         private static RootCommand ConfigureCommandLineParser()
         {
             // Command line options
-            var tableNameOption = new Option<string>(
+            Option<string> tableNameOption = new(
                 name: "--tableName",
                 description: "Lookup Table name");
 
-            var projectScopeOption = new Option<string>(
+            Option<string> projectScopeOption = new(
                 name: "--projectScope",
                 description: "Process Automation project scope containing the table specified. E.g. 'project/Global'");
 
-            var fileOption = new Option<string>(
+            Option<string> fileOption = new(
                 name: "--file",
                 description: "CSV file full path to import or export");
 
-            var servicePrincipalKeyOption = new Option<string>(
+            Option<string> servicePrincipalKeyOption = new(
                 name: "--servicePrincipalKey",
                 description: "Laserfiche Service Principal Key");
 
-            var accessKeyBase64StringOption = new Option<string>(
+            Option<string> accessKeyBase64StringOption = new(
                 name: "--accessKeyBase64String",
                 description: "Service App AccessKeyBase64String");
+
+            Option<Format> outputFormatOption = new(
+               name: "--outputFormat",
+               () => Format.JSON,
+               description: "Output Format");
 
             // Command line commands
             var rootCommand = new RootCommand("Laserfiche Lookup Tables command line utility.");
@@ -54,12 +59,13 @@ namespace Laserfiche.Api
                 servicePrincipalKeyOption,
                 accessKeyBase64StringOption));
 
-            rootCommand.AddCommand(CreateCommand_ExportLookupTableAsCSV(
+            rootCommand.AddCommand(CreateCommand_QueryLookupTable(
                 tableNameOption,
                 projectScopeOption,
                 fileOption,
                 servicePrincipalKeyOption,
-                accessKeyBase64StringOption));
+                accessKeyBase64StringOption,
+                outputFormatOption));
 
 
 
@@ -71,7 +77,8 @@ namespace Laserfiche.Api
             Option<string> servicePrincipalKeyOption,
             Option<string> accessKeyBase64StringOption)
         {
-            var command = new Command("GetLookupTables", "Gets all the lookup tables accessible by the service principal in the provided project scope.")
+            const string commandName = "GetLookupTables";
+            var command = new Command(commandName, "Gets all the lookup tables accessible by the service principal in the provided project scope.")
                 {
                     projectScopeOption,
                     servicePrincipalKeyOption,
@@ -92,7 +99,7 @@ namespace Laserfiche.Api
                 }
                 catch (Exception ex)
                 {
-                    ConsoleWriteError(ex.Message);
+                    ConsoleWriteError($"{commandName} error: {ex.Message}");
                     System.Environment.Exit(1);
                 }
             },
@@ -103,65 +110,109 @@ namespace Laserfiche.Api
             return command;
         }
 
-        private static Command CreateCommand_ExportLookupTableAsCSV(
+        private static Command CreateCommand_QueryLookupTable(
             Option<string> tableNameOption,
             Option<string> projectScopeOption,
             Option<string> fileOption,
             Option<string> servicePrincipalKeyOption,
-            Option<string> accessKeyBase64StringOption)
+            Option<string> accessKeyBase64StringOption,
+            Option<Format> outputFormatOption)
         {
-            const string commandName = "ExportLookupTableAsCSV";
-            var command = new Command(commandName, "Export a Lookup Table to a CSV file.")
+            const string commandName = "QueryLookupTable";
+            var command = new Command(commandName, "Query Lookup Table.")
                 {
                     tableNameOption,
                     projectScopeOption,
                     fileOption,
                     servicePrincipalKeyOption,
-                    accessKeyBase64StringOption
+                    accessKeyBase64StringOption,
+                    outputFormatOption
                 };
 
-            command.SetHandler(async (tableName, projectScope, file, servicePrincipalKey, accessKeyBase64String) =>
+            command.SetHandler(async (tableName, projectScope, file, servicePrincipalKey, accessKeyBase64String, outputFormat) =>
             {
                 var stopwatch = new Stopwatch();
+                int rowCount = 0;
                 try
                 {
                     tableName = tableName?.Trim() ?? throw new ArgumentNullException(nameof(tableName));
-                    file = file?.Trim() ?? throw new ArgumentNullException(nameof(file));
                     string scope = CreateODataApiScope(true, false, projectScope);
-
                     ODataApiClient oDataApiClient = CreateODataApiClient(servicePrincipalKey, accessKeyBase64String, scope);
 
-                    Dictionary<string, Entity> entityDictionary = await oDataApiClient.GetTableMetadataAsync();
 
-                    if (!entityDictionary.TryGetValue(tableName, out Entity entity))
+                    bool outputToFile = !string.IsNullOrWhiteSpace(file);
+                    using Stream outputFile = outputToFile ? File.Create(file, 4096, FileOptions.WriteThrough) : null;
+                    using TextWriter outputTextWriter = outputFile != null ? new StreamWriter(outputFile, Encoding.UTF8) : Console.Out;
+
+                    string select = null;
+
+                    switch (outputFormat)
                     {
-                        throw new Exception($"Lookup table not found. Verify that the table exists and the Process Automation project scope containing the table is specified.");
+                        case Format.CSV:
+                            if (string.IsNullOrWhiteSpace(select))
+                            {
+                                IList<string> columnNames = await GetTableColumnNamesExcludingKey(tableName, oDataApiClient);
+                                string columnsHeadersCsv = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, columnNames);
+                                select = columnsHeadersCsv;
+                            }
+                            await outputTextWriter.WriteLineAsync(select);
+                            break;
+                        case Format.JSON:
+                            select = null;
+                            await outputTextWriter.WriteLineAsync("[");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(outputFormat));
+                    }
+
+                    Func<JsonElement, Task> processTableRow = async (tableRow) =>
+                    {
+                        string rowTxt;
+                        switch (outputFormat)
+                        {
+                            case Format.CSV:
+                                rowTxt = tableRow.ToCsv();
+                                break;
+                            case Format.JSON:
+                                rowTxt = tableRow.ToString();
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException(nameof(outputFormat));
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(rowTxt))
+                        {
+                            if (outputFormat == Format.JSON && rowCount > 0)
+                            {
+                                await outputTextWriter.WriteAsync("," + Environment.NewLine);
+                            }
+                            await outputTextWriter.WriteAsync(rowTxt);
+                            rowCount++;
+                        }
                     };
 
-                    IList<string> columnNames = entity.Properties
-                        .Select(r => r.Name)
-                        .Where(r => r != entity.KeyName).ToList();
+                    await oDataApiClient.QueryLookupTableAsync(tableName, processTableRow,
+                        new ODataQueryParameters { Select = select });
 
-                    int rowCount = 0;
-                    var tableCsv = new StringBuilder();
-                    string columnsHeaders = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, columnNames);
-                    tableCsv.AppendLine(columnsHeaders);
-                    Action<JsonElement> processTableRow = (tableRow) =>
+                    switch (outputFormat)
                     {
-                        rowCount++;
-                        var rowCsv = tableRow.ToCsv();
-                        if (!string.IsNullOrWhiteSpace(rowCsv))
-                            tableCsv.AppendLine(rowCsv);
-                    };
-                    await oDataApiClient.QueryLookupTableAsync(entity.Name, processTableRow,
-                        new ODataQueryParameters { Select = columnsHeaders });
-                    var csv = tableCsv.ToString();
-                    await File.WriteAllTextAsync(file, csv);
-                    Console.WriteLine($"{commandName} exported {rowCount} rows.");
+                        case Format.CSV:
+                            break;
+                        case Format.JSON:
+                            await outputTextWriter.WriteAsync(Environment.NewLine + "]");
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(outputFormat));
+                    }
+
+                    if (outputToFile)
+                    {
+                        Console.WriteLine($"{commandName} exported {rowCount} rows in {stopwatch.ElapsedMilliseconds}ms.");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    ConsoleWriteError($"{commandName} error {ex.Message}");
+                    ConsoleWriteError($"{commandName} error{(rowCount > 0 ? " at row: " + rowCount.ToString() : "")}. {ex.Message}");
                     System.Environment.Exit(1);
                 }
             },
@@ -169,8 +220,23 @@ namespace Laserfiche.Api
             projectScopeOption,
             fileOption,
             servicePrincipalKeyOption,
-            accessKeyBase64StringOption);
+            accessKeyBase64StringOption,
+            outputFormatOption);
             return command;
+        }
+
+        private static async Task<IList<string>> GetTableColumnNamesExcludingKey(string tableName, ODataApiClient oDataApiClient)
+        {
+            Dictionary<string, Entity> entityDictionary = await oDataApiClient.GetTableMetadataAsync();
+            if (!entityDictionary.TryGetValue(tableName, out Entity entity))
+            {
+                throw new Exception($"Lookup table not found. Verify that the table exists and the Process Automation project scope containing the table is specified.");
+            };
+
+            IList<string> columnNames = entity.Properties
+                .Select(r => r.Name)
+                .Where(r => r != entity.KeyName).ToList();
+            return columnNames;
         }
 
         private static string CreateODataApiScope(bool allowTableRead, bool allowTableWrite, string projectScope)
@@ -224,6 +290,12 @@ namespace Laserfiche.Api
             {
                 Console.ResetColor();
             }
+        }
+
+        public enum Format
+        {
+            JSON = 0,
+            CSV = 1
         }
     }
 }

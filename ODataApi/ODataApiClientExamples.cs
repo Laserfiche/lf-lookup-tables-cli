@@ -43,13 +43,5 @@ namespace Laserfiche.Api.ODataApi
                         (taskProgress.Errors != null && taskProgress.Errors.Count > 0 ? " " + System.Text.Json.JsonSerializer.Serialize(taskProgress.Errors) : ""));
                 });
         }
-
-        //private static async Task InsertRowInLookupTable(
-        //   ODataApiClient oDataApiClient,
-        //   string tableName)
-        //{
-        //    var row = oDataApiClient.UpsertTableRowAsync(tableName,null,
-        //        new JsonElement() )
-        //}
     }
 }
