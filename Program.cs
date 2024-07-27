@@ -51,6 +51,17 @@ namespace Laserfiche.Api
                () => Format.JSON,
                description: "Output Format");
 
+            Option<string> filterOption = new(
+               name: "--$filter",
+               description: "Query filter conforming to OData v4 syntax. See: https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_BuiltinFilterOperations"
+                + " - 'gt' Greater than: 'Price gt 20'"
+                + " - 'in' Is a member of: 'City in ('Roma', 'London')'");
+
+            Option<bool> showColumnsHeaderOption = new(
+                name: "--showColumnsHeader",
+                () => true,
+                description: "Includes the column header is a row in the output, if applicable.");
+
             // Command line commands
             var rootCommand = new RootCommand("Laserfiche Lookup Tables command line utility.");
 
@@ -65,7 +76,9 @@ namespace Laserfiche.Api
                 fileOption,
                 servicePrincipalKeyOption,
                 accessKeyBase64StringOption,
-                outputFormatOption));
+                outputFormatOption,
+                filterOption,
+                showColumnsHeaderOption));
 
 
 
@@ -116,20 +129,32 @@ namespace Laserfiche.Api
             Option<string> fileOption,
             Option<string> servicePrincipalKeyOption,
             Option<string> accessKeyBase64StringOption,
-            Option<Format> outputFormatOption)
+            Option<Format> outputFormatOption,
+            Option<string> filterOption,
+            Option<bool> showColumnsHeaderOption)
         {
             const string commandName = "QueryLookupTable";
-            var command = new Command(commandName, "Query Lookup Table.")
+            var command = new Command(commandName, "Query a Lookup Table.")
                 {
                     tableNameOption,
                     projectScopeOption,
                     fileOption,
                     servicePrincipalKeyOption,
                     accessKeyBase64StringOption,
-                    outputFormatOption
+                    outputFormatOption,
+                    filterOption,
+                    showColumnsHeaderOption
                 };
 
-            command.SetHandler(async (tableName, projectScope, file, servicePrincipalKey, accessKeyBase64String, outputFormat) =>
+            command.SetHandler(async (
+                tableName,
+                projectScope,
+                file,
+                servicePrincipalKey,
+                accessKeyBase64String,
+                outputFormat,
+                filter,
+                showColumnsHeader) =>
             {
                 var stopwatch = new Stopwatch();
                 int rowCount = 0;
@@ -158,8 +183,11 @@ namespace Laserfiche.Api
                             }
                             else
                             {
-                                header = "";
+                                header = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, select.Split(ODataUtilities.CSV_COMMA_SEPARATOR).Select(r => r.Trim())) + Environment.NewLine;
                             }
+
+                            if (!showColumnsHeader)
+                                header = "";
                             footer = "";
                             rowSeparator = Environment.NewLine;
                             jsonElementRowToStringFunc = (jsonElementRow) => jsonElementRow.ToCsv();
@@ -193,7 +221,7 @@ namespace Laserfiche.Api
                                 rowCount++;
                             }
                         },
-                        new ODataQueryParameters { Select = select });
+                        new ODataQueryParameters { Select = select, Filter = filter });
 
                     await outputTextWriter.WriteAsync(footer);
 
@@ -213,7 +241,9 @@ namespace Laserfiche.Api
             fileOption,
             servicePrincipalKeyOption,
             accessKeyBase64StringOption,
-            outputFormatOption);
+            outputFormatOption,
+            filterOption,
+            showColumnsHeaderOption);
             return command;
         }
 
