@@ -138,13 +138,14 @@ namespace Laserfiche.Api
                     tableName = tableName?.Trim() ?? throw new ArgumentNullException(nameof(tableName));
                     string scope = CreateODataApiScope(true, false, projectScope);
                     ODataApiClient oDataApiClient = CreateODataApiClient(servicePrincipalKey, accessKeyBase64String, scope);
-
-
                     bool outputToFile = !string.IsNullOrWhiteSpace(file);
-                    using Stream outputFile = outputToFile ? File.Create(file, 4096, FileOptions.WriteThrough) : null;
-                    using TextWriter outputTextWriter = outputFile != null ? new StreamWriter(outputFile, Encoding.UTF8) : Console.Out;
-
+                    using Stream outputFileStream = outputToFile ? File.Create(file, 4096, FileOptions.WriteThrough) : null;
+                    using TextWriter outputTextWriter = outputFileStream != null ? new StreamWriter(outputFileStream, Encoding.UTF8) : Console.Out;
                     string select = null;
+                    string header;
+                    string footer;
+                    string rowSeparator;
+                    Func<JsonElement, string> jsonElementRowToStringFunc;
 
                     switch (outputFormat)
                     {
@@ -152,58 +153,49 @@ namespace Laserfiche.Api
                             if (string.IsNullOrWhiteSpace(select))
                             {
                                 IList<string> columnNames = await GetTableColumnNamesExcludingKey(tableName, oDataApiClient);
-                                string columnsHeadersCsv = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, columnNames);
-                                select = columnsHeadersCsv;
+                                select = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, columnNames);
+                                header = select + Environment.NewLine;
                             }
-                            await outputTextWriter.WriteLineAsync(select);
+                            else
+                            {
+                                header = "";
+                            }
+                            footer = "";
+                            rowSeparator = Environment.NewLine;
+                            jsonElementRowToStringFunc = (jsonElementRow) => jsonElementRow.ToCsv();
                             break;
                         case Format.JSON:
                             select = null;
-                            await outputTextWriter.WriteLineAsync("[");
+                            header = "[" + Environment.NewLine;
+                            footer = Environment.NewLine + "]";
+                            rowSeparator = "," + Environment.NewLine;
+                            jsonElementRowToStringFunc = (jsonElementRow) => jsonElementRow.ToString();
                             break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(outputFormat));
                     }
+                    await outputTextWriter.WriteAsync(header);
 
-                    Func<JsonElement, Task> processTableRow = async (tableRow) =>
-                    {
-                        string rowTxt;
-                        switch (outputFormat)
+                    await oDataApiClient.QueryLookupTableAsync(
+                        tableName,
+                        async (jsonElementRow) =>
                         {
-                            case Format.CSV:
-                                rowTxt = tableRow.ToCsv();
-                                break;
-                            case Format.JSON:
-                                rowTxt = tableRow.ToString();
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException(nameof(outputFormat));
-                        }
-
-                        if (!string.IsNullOrWhiteSpace(rowTxt))
-                        {
-                            if (outputFormat == Format.JSON && rowCount > 0)
+                            string rowTxt = jsonElementRowToStringFunc(jsonElementRow);
+                            if (!string.IsNullOrWhiteSpace(rowTxt))
                             {
-                                await outputTextWriter.WriteAsync("," + Environment.NewLine);
+                                bool isFirstRow = rowCount == 0;
+                                rowCount++;
+                                if (!isFirstRow)
+                                {
+                                    await outputTextWriter.WriteAsync(rowSeparator);
+                                }
+                                await outputTextWriter.WriteAsync(rowTxt);
+                                rowCount++;
                             }
-                            await outputTextWriter.WriteAsync(rowTxt);
-                            rowCount++;
-                        }
-                    };
-
-                    await oDataApiClient.QueryLookupTableAsync(tableName, processTableRow,
+                        },
                         new ODataQueryParameters { Select = select });
 
-                    switch (outputFormat)
-                    {
-                        case Format.CSV:
-                            break;
-                        case Format.JSON:
-                            await outputTextWriter.WriteAsync(Environment.NewLine + "]");
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(outputFormat));
-                    }
+                    await outputTextWriter.WriteAsync(footer);
 
                     if (outputToFile)
                     {
@@ -242,7 +234,7 @@ namespace Laserfiche.Api
         private static string CreateODataApiScope(bool allowTableRead, bool allowTableWrite, string projectScope)
         {
             string scope = projectScope?.Trim() ?? throw new ArgumentNullException(nameof(projectScope));
-            scope = $"{(allowTableRead ? "table.Read " : "")}{(allowTableWrite ? "table.Write " : "")}{projectScope}";
+            scope = $"{(allowTableRead ? "table.Read " : "")}{(allowTableWrite ? "table.Write " : "")}{scope}";
             return scope;
         }
 
