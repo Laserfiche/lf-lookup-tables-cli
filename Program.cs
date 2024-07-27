@@ -52,7 +52,7 @@ namespace Laserfiche.Api
                description: "Output Format");
 
             Option<string> filterOption = new(
-               name: "--$filter",
+               name: "--filter",
                description: "Query filter conforming to OData v4 syntax. See: https://docs.oasis-open.org/odata/odata/v4.01/odata-v4.01-part1-protocol.html#sec_BuiltinFilterOperations"
                 + " - 'gt' Greater than: 'Price gt 20'"
                 + " - 'in' Is a member of: 'City in ('Roma', 'London')'");
