@@ -1,20 +1,20 @@
 ﻿// Copyright Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Laserfiche.Api.Client;
 using Laserfiche.Api.Client.HttpHandlers;
 using Laserfiche.Api.Client.OAuth;
 using Laserfiche.Api.Client.Utils;
-using Laserfiche.Repository.Api.Client;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using TaskStatus = Laserfiche.Repository.Api.Client.TaskStatus;
 
 namespace Laserfiche.Api.ODataApi
 {
@@ -132,66 +132,36 @@ namespace Laserfiche.Api.ODataApi
         }
 
         /// <summary>
-        /// Get Table row
-        /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="key"></param>
-        /// <param name="select"></param>
-        /// <param name="cancel"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public async Task<JsonElement> GetTableRowAsync(
-            string tableName,
-            string key,
-            string select,
-            CancellationToken cancel = default)
-        {
-            if (string.IsNullOrWhiteSpace(tableName))
-                throw new ArgumentNullException(nameof(tableName));
-
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
-
-            string url = $"table/{Uri.EscapeDataString(tableName)}('{Uri.EscapeDataString(key)}')";
-            if (select != null)
-                url = (new ODataQueryParameters() { Select = select }).AppendQueryString(url);
-
-            var httpResponse = await _httpClient.GetAsync(url, cancel);
-            httpResponse.EnsureSuccessStatusCode();
-            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
-            return content.RootElement;
-        }
-
-        /// <summary>
         /// Replaces an existing table with data from a file with supported format.
         /// </summary>
         /// <param name="tableName"></param>
-        /// <param name="tableCsv"></param>
+        /// <param name="tableContentStream"></param>
         /// <param name="cancel"></param>
         /// <returns>TaskId</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public async Task<string> ReplaceAllRowsAsync(
           string tableName,
-          Stream tableCsv,
+          Stream tableContentStream,
           CancellationToken cancel = default)
         {
             if (string.IsNullOrWhiteSpace(tableName))
                 throw new ArgumentNullException(nameof(tableName));
 
-            if (tableCsv == null)
-                throw new ArgumentNullException(nameof(tableCsv));
+            if (tableContentStream == null)
+                throw new ArgumentNullException(nameof(tableContentStream));
 
             string url = $"table/{Uri.EscapeDataString(tableName)}/ReplaceAllRowsAsync";
 
-            using var multipartContent = new MultipartFormDataContent("-N8KdKd7Yk");
+            using var multipartContent = new MultipartFormDataContent("-N891KdKd7Yk");
             multipartContent.Headers.ContentType.MediaType = "multipart/form-data";
-            multipartContent.Add(new StreamContent(tableCsv), "file", "table.csv");
+            multipartContent.Add(new StreamContent(tableContentStream), "file", "table.csv");
             var httpResponse = await _httpClient.PostAsync(url, multipartContent, cancel);
             httpResponse.EnsureSuccessStatusCode();
             JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
             var taskId = content.RootElement.GetStringPropertyValue("taskId");
             return taskId;
         }
+
 
         /// <summary>
         /// Monitor the progress of a long running task. 
@@ -213,8 +183,7 @@ namespace Laserfiche.Api.ODataApi
                 string url = $"general/Tasks({Uri.EscapeDataString(taskId)})";
                 var httpResponse = await _httpClient.GetAsync(url, cancel);
                 httpResponse.EnsureSuccessStatusCode();
-                var contentTxt = await httpResponse.Content.ReadAsStringAsync(cancel);
-                var taskProgress = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskProgress>(contentTxt);
+                var taskProgress = await httpResponse.Content.ReadFromJsonAsync<TaskProgress>(default(JsonSerializerOptions), cancel);
                 handleTaskProgress(taskProgress);
 
                 bool done = taskProgress.Status == TaskStatus.Completed || taskProgress.Status == TaskStatus.Failed || taskProgress.Status == TaskStatus.Cancelled;
@@ -224,6 +193,58 @@ namespace Laserfiche.Api.ODataApi
                 await Task.Delay(100, cancel);
             }
         }
+    }
+
+    public class TaskProgress
+    {
+        /// <summary>
+        /// Task Id.
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// The type of the task associated with this TaskProgress.
+        /// </summary>
+        public string Type { get; set; }
+
+        /// <summary>
+        /// Determines what percentage of the execution of the associated task is completed.
+        /// </summary>
+        public int PercentComplete { get; set; }
+
+        /// <summary>
+        /// The status of the task associated with this TaskProgress.
+        /// </summary>
+        public TaskStatus Status { get; set; }
+
+        /// <summary>
+        /// The list of errors occurred during the execution of the associated task.
+        /// </summary>
+        public IList<ProblemDetails> Errors { get; set; }
+
+        /// <summary>
+        /// The result of the execution of the associated task.
+        /// </summary>
+        public JsonDocument Result { get; set; }
+
+        /// <summary>
+        /// The time representing when the associated task's execution started.
+        /// </summary>
+        public DateTimeOffset StartTime { get; set; }
+
+        /// <summary>
+        /// The time representing when the associated task's status last changed.
+        /// </summary>
+        public DateTimeOffset LastUpdateTime { get; set; }
+    }
+
+    public enum TaskStatus
+    {
+        NotStarted = 0,
+        InProgress = 1,
+        Completed = 2,
+        Failed = 3,
+        Cancelled = 4,
     }
 
     public class Entity

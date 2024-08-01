@@ -4,18 +4,25 @@
       "commandName": "Project",
       "commandLineArgs": ""
     },
+
     "Command-Help": {
       "commandName": "Project",
       "commandLineArgs": "-?"
     },
+
     "Command-GetLookupTables": {
       "commandName": "Project",
       "commandLineArgs": "GetLookupTables --projectScope=\"project/Global\" "
     },
+
     "Command-QueryLookupTable": {
       "commandName": "Project",
-      "commandLineArgs": "QueryLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" ",
-      //"commandLineArgs": "QueryLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+      "commandLineArgs": "QueryLookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --outputFormat=csv  --includeColumnsHeader=true --filter=\"numeric lt 123\" --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
+    },
+
+    "Command-ReplaceAllRowsAsync": {
+      "commandName": "Project",
+      "commandLineArgs": "ReplaceAllRowsAsync --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\"  --file=\"C:\\Users\\paolo.argentieri\\Downloads\\AAA.csv\" "
     }
   }
 }
