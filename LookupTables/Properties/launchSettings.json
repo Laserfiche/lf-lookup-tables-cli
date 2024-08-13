@@ -1,0 +1,28 @@
+{
+  "profiles": {
+    "No Command": {
+      "commandName": "Project",
+      "commandLineArgs": ""
+    },
+
+    "Command-Help": {
+      "commandName": "Project",
+      "commandLineArgs": "-?"
+    },
+
+    "Command-GetLookupTables": {
+      "commandName": "Project",
+      "commandLineArgs": "List-LookupTables --projectScope=\"project/Global\" "
+    },
+
+    "Command-QueryLookupTable": {
+      "commandName": "Project",
+      "commandLineArgs": "Query-LookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --outputFormat=csv  --includeColumnsHeader=true --filter=\"numeric lt 999.123\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
+    },
+
+    "Command-ReplaceAllRowsAsync": {
+      "commandName": "Project",
+      "commandLineArgs": "Replace-LookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\"  --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
+    }
+  }
+}

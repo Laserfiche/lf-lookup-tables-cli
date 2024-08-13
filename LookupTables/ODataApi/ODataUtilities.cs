@@ -13,7 +13,7 @@ using System.Xml.Linq;
 namespace Laserfiche.LookupTables.ODataApi
 
 {
-    internal static class ODataUtilities
+    public static class ODataUtilities
     {
         public const char CSV_COMMA_SEPARATOR = ',';
 
@@ -21,7 +21,7 @@ namespace Laserfiche.LookupTables.ODataApi
         {
             string scope = projectScope?.Trim() ?? throw new ArgumentNullException(nameof(projectScope));
             scope = $"{(allowTableRead ? "table.Read " : "")}{(allowTableWrite ? "table.Write " : "")}{scope}";
-            return scope;
+            return scope.Trim();
         }
 
         public static string GetStringPropertyValue(this JsonElement element, string propertyName)
