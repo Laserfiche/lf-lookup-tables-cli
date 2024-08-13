@@ -1,6 +1,7 @@
 ﻿// Copyright Laserfiche.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Laserfiche.Api.Client.OAuth;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,12 +10,20 @@ using System.Text;
 using System.Text.Json;
 using System.Xml.Linq;
 
-namespace Laserfiche.Api.ODataApi
+namespace Laserfiche.LookupTables.ODataApi
 
 {
     internal static class ODataUtilities
     {
         public const char CSV_COMMA_SEPARATOR = ',';
+
+        public static string CreateODataApiScope(bool allowTableRead, bool allowTableWrite, string projectScope)
+        {
+            string scope = projectScope?.Trim() ?? throw new ArgumentNullException(nameof(projectScope));
+            scope = $"{(allowTableRead ? "table.Read " : "")}{(allowTableWrite ? "table.Write " : "")}{scope}";
+            return scope;
+        }
+
         public static string GetStringPropertyValue(this JsonElement element, string propertyName)
         {
             if (element.TryGetProperty(propertyName, out JsonElement nameElement))
@@ -86,6 +95,40 @@ namespace Laserfiche.Api.ODataApi
                 sb.Append(strValue);
             }
             return sb.ToString();
+        }
+
+
+        public static ODataApiClient CreateODataApiClient(string servicePrincipalKey, string accessKeyBase64String, string scope)
+        {
+            {
+                if (string.IsNullOrEmpty(scope)) throw new ArgumentNullException(nameof(scope));
+                ApiClientConfiguration config = new(".env");
+                AccessKey accessKey;
+                if (servicePrincipalKey != null || accessKeyBase64String != null)
+                {
+                    accessKey = AccessKey.CreateFromBase64EncodedAccessKey(accessKeyBase64String);
+                }
+                else if (config.AccessKey != null && config.ServicePrincipalKey != null)
+                {
+                    servicePrincipalKey = config.ServicePrincipalKey;
+                    accessKey = config.AccessKey;
+                }
+                else
+                {
+                    accessKey = null;
+                }
+
+                if (string.IsNullOrEmpty(servicePrincipalKey)) throw new ArgumentNullException(nameof(servicePrincipalKey));
+                if (accessKey == null) throw new ArgumentNullException(nameof(accessKeyBase64String));
+
+                ODataApiClient oDataApiClient = ODataApiClient.CreateFromServicePrincipalKey(
+                    servicePrincipalKey,
+                    config.AccessKey,
+                    scope);
+
+                return oDataApiClient;
+            }
+
         }
     }
 }

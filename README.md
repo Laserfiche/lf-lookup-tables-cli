@@ -1,7 +1,6 @@
-# lf-sample-repository-api-dotnet-srv
+# LookupTables.exe
 
-Sample .NET core service app that connects to a Laserfiche Cloud or Self-Hosted Repository.
-[Sample Code](./Program.cs)
+Command line utility to interact with Laserfiche Lookup Tables. 
 
 ## Cloud Prerequisites
 
@@ -54,24 +53,18 @@ SERVICE_PRINCIPAL_KEY="<Service Principal Key created from step 1>"
 
 ACCESS_KEY="<base-64 Access Key string created from step 2>"
 
-REPOSITORY_ID="<Repository ID from the 'Repository Administration' page>"
 ```
-- Note: The .env file is used in local development environment to set operating system environment variables.
+- **NOTE:** The .env file contains secrets used to set operating system environment variables.
   - DO NOT check-in the .env file in Git.
-
-## Self-Hosted Prerequisites
-
-See [Use v1 this page](https://github.com/Laserfiche/lf-sample-repository-api-dotnet-srv/tree/v1#self-hosted-prerequisites).
 
 ## Build and Run this App
 
 - Open a terminal window.
 - Enter the following commands:
 
-```csharp
+```
 dotnet build
 dotnet run
 ```
 
-These commands will install, compile, and execute this program which will print out the repository information in the output window.
-Note: This project uses the [Laserfiche.Repository.Api.Client.V2](https://www.nuget.org/packages/Laserfiche.Repository.Api.Client.V2) NuGet package. See [Laserfiche Repository API Documentation](https://developer.laserfiche.com/libraries.html).
+These commands will install, compile, and execute this program which will print out the help documentation in the output window.

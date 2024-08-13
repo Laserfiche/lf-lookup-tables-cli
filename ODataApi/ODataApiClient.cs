@@ -16,7 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace Laserfiche.Api.ODataApi
+namespace Laserfiche.LookupTables.ODataApi
 {
     /// <summary>
     /// Laserfiche OData API Client. See https://api.laserfiche.com/odata4/swagger/index.html?urls.primaryName=v1
@@ -26,9 +26,7 @@ namespace Laserfiche.Api.ODataApi
         private readonly HttpClient _httpClient;
         private ODataApiClient(IHttpRequestHandler httpRequestHandler)
         {
-            if (httpRequestHandler == null)
-                throw new ArgumentNullException(nameof(httpRequestHandler));
-
+            ArgumentNullException.ThrowIfNull(httpRequestHandler, nameof(httpRequestHandler));
 
             var apiHttpMessageHandler = new ApiHttpMessageHandler(
                 httpRequestHandler,
@@ -144,12 +142,8 @@ namespace Laserfiche.Api.ODataApi
           Stream tableContentStream,
           CancellationToken cancel = default)
         {
-            if (string.IsNullOrWhiteSpace(tableName))
-                throw new ArgumentNullException(nameof(tableName));
-
-            if (tableContentStream == null)
-                throw new ArgumentNullException(nameof(tableContentStream));
-
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(tableName, nameof(tableName));
+            ArgumentNullException.ThrowIfNull(tableContentStream, nameof(tableContentStream));
             string url = $"table/{Uri.EscapeDataString(tableName)}/ReplaceAllRowsAsync";
 
             using var multipartContent = new MultipartFormDataContent("-N891KdKd7Yk");

@@ -4,7 +4,7 @@ using Laserfiche.Api.Client.OAuth;
 using System;
 using System.IO;
 
-namespace Laserfiche.Api
+namespace Laserfiche.LookupTables
 {
     internal class ApiClientConfiguration
     {
