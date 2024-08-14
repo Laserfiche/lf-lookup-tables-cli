@@ -21,7 +21,7 @@ jobs:
         dotnet-version: 8.0.x
 
     - name: Tag Versioning
-      uses: paulhatch/semantic-version@v5
+      uses: paulhatch/semantic-version@latest
   
     - name: Restore dependencies
       run: dotnet restore
