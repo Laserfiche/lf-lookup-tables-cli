@@ -20,11 +20,11 @@ namespace Laserfiche.LookupTables
         {
             // Command line options
             Option<string> tableNameOption = new(
-                name: "--tableName",
+                name: "--table-name",
                 description: "Lookup Table name");
 
             Option<string> projectScopeOption = new(
-                name: "--projectScope",
+                name: "--project-scope",
                 description: "Process Automation project scope containing the table specified. E.g. 'project/Global'");
 
             Option<string> fileOption = new(
@@ -32,15 +32,15 @@ namespace Laserfiche.LookupTables
                 description: "File full path to import or export");
 
             Option<string> servicePrincipalKeyOption = new(
-                name: "--servicePrincipalKey",
+                name: "--service-principal-key",
                 description: "Laserfiche Service Principal Key");
 
             Option<string> accessKeyBase64StringOption = new(
-                name: "--accessKeyBase64String",
+                name: "--access-key-base64string",
                 description: "Service App AccessKeyBase64String");
 
             Option<DataFormat> outputFormatOption = new(
-               name: "--outputFormat",
+               name: "--output-format",
                () => DataFormat.JSON,
                description: "Output Format");
 
@@ -51,7 +51,7 @@ namespace Laserfiche.LookupTables
                 + " - 'in' Is a member of: 'City in ('Roma', 'London')'");
 
             Option<bool> includeColumnsHeaderOption = new(
-                name: "--includeColumnsHeader",
+                name: "--include-columns-header",
                 () => true,
                 description: "Includes the column header is a row in the output, if applicable.");
 

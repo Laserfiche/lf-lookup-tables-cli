@@ -26,7 +26,7 @@ namespace Laserfiche.LookupTables.Commands
            Option<string> filterOption,
            Option<bool> includeColumnsHeaderOption)
         {
-            const string commandName = "Query-LookupTable";
+            const string commandName = "query-lookup-table";
             var command = new Command(commandName, "Query a Lookup Table.")
                 {
                     tableNameOption,

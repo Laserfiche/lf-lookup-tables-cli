@@ -5,12 +5,12 @@ using Laserfiche.Api.Client;
 using Laserfiche.Api.Client.HttpHandlers;
 using Laserfiche.Api.Client.OAuth;
 using Laserfiche.Api.Client.Utils;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -148,7 +148,8 @@ namespace Laserfiche.LookupTables.ODataApi
 
             using var multipartContent = new MultipartFormDataContent("-N891KdKd7Yk");
             multipartContent.Headers.ContentType.MediaType = "multipart/form-data";
-            multipartContent.Add(new StreamContent(tableContentStream), "file", "table.csv");
+            using var streamContent = new StreamContent(tableContentStream);
+            multipartContent.Add(streamContent, "file", "table.csv");
             var httpResponse = await _httpClient.PostAsync(url, multipartContent, cancel);
             httpResponse.EnsureSuccessStatusCode();
             JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
@@ -177,7 +178,8 @@ namespace Laserfiche.LookupTables.ODataApi
                 string url = $"general/Tasks({Uri.EscapeDataString(taskId)})";
                 var httpResponse = await _httpClient.GetAsync(url, cancel);
                 httpResponse.EnsureSuccessStatusCode();
-                var taskProgress = await httpResponse.Content.ReadFromJsonAsync<TaskProgress>(default(JsonSerializerOptions), cancel);
+                var body = await httpResponse.Content.ReadAsStringAsync();
+                var taskProgress = JsonConvert.DeserializeObject<TaskProgress>(body);
                 handleTaskProgress(taskProgress);
 
                 bool done = taskProgress.Status == TaskStatus.Completed || taskProgress.Status == TaskStatus.Failed || taskProgress.Status == TaskStatus.Cancelled;
@@ -191,6 +193,12 @@ namespace Laserfiche.LookupTables.ODataApi
 
     public class TaskProgress
     {
+        [JsonConstructor]
+        public TaskProgress()
+        {
+
+        }
+
         /// <summary>
         /// Task Id.
         /// </summary>

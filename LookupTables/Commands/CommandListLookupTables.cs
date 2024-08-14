@@ -14,7 +14,7 @@ namespace Laserfiche.LookupTables.Commands
            Option<string> servicePrincipalKeyOption,
            Option<string> accessKeyBase64StringOption)
         {
-            const string commandName = "List-LookupTables";
+            const string commandName = "list-lookup-tables";
             var command = new Command(commandName, "Gets all the lookup tables accessible by the service principal in the provided project scope.")
                 {
                     projectScopeOption,

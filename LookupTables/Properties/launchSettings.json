@@ -1,28 +1,28 @@
 {
   "profiles": {
-    "No Command": {
+    "default": {
       "commandName": "Project",
       "commandLineArgs": ""
     },
 
-    "Command-Help": {
+    "Command-help": {
       "commandName": "Project",
       "commandLineArgs": "-?"
     },
 
-    "Command-GetLookupTables": {
+    "Command-list-lookup-tables": {
       "commandName": "Project",
-      "commandLineArgs": "List-LookupTables --projectScope=\"project/Global\" "
+      "commandLineArgs": "list-lookup-tables --project-scope=\"project/Global\" "
     },
 
-    "Command-QueryLookupTable": {
+    "Command-query-lookup-table": {
       "commandName": "Project",
-      "commandLineArgs": "Query-LookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\" --outputFormat=csv  --includeColumnsHeader=true --filter=\"numeric lt 999.123\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
+      "commandLineArgs": "query-lookup-table --table-name=ALL_DATA_TYPES_TABLE_SAMPLE --project-scope=\"project/Global\" --output-format=csv  --include-columns-header=true --filter=\"numeric lt 999.123\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
     },
 
-    "Command-ReplaceAllRowsAsync": {
+    "Command-replace-lookup-table": {
       "commandName": "Project",
-      "commandLineArgs": "Replace-LookupTable --tableName=ALL_DATA_TYPES_TABLE_SAMPLE --projectScope=\"project/Global\"  --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
+      "commandLineArgs": "replace-lookup-table --table-name=ALL_DATA_TYPES_TABLE_SAMPLE --project-scope=\"project/Global\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
     }
   }
 }
