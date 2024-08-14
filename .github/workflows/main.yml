@@ -1,4 +1,4 @@
-name: lf-sample-repository-api-dotnet-srv-CI
+name: build-lf-lookup-tables
 
 on:
   push:
