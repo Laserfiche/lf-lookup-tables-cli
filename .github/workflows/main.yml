@@ -20,12 +20,18 @@ jobs:
       with:
         dotnet-version: 8.0.x
           
-    - name: Restore dependencies
+    - name: dotnet restore
       run: dotnet restore
 
-    - name: Build
+    - name: dotnet build
       run: dotnet build --no-restore
 
-    - name: Test
+    - name: dotnet test
       run: dotnet test --no-build --verbosity normal
 
+    - name: dotnet publish self-contained win-x64
+      run: dotnet publish ./LookupTables/LookupTables.csproj --no-restore -c Release --self-contained -r win-x64
+
+    - name: dotnet publish self-contained linux-x64
+      run: dotnet publish ./LookupTables/LookupTables.csproj --no-restore -c Release --self-contained -r linux-x64
+  

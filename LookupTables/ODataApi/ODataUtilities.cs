@@ -100,35 +100,34 @@ namespace Laserfiche.LookupTables.ODataApi
 
         public static ODataApiClient CreateODataApiClient(string servicePrincipalKey, string accessKeyBase64String, string scope)
         {
+            if (string.IsNullOrEmpty(scope)) throw new ArgumentNullException(nameof(scope));
+
+            AccessKey accessKey;
+            try
             {
-                if (string.IsNullOrEmpty(scope)) throw new ArgumentNullException(nameof(scope));
-                ApiClientConfiguration config = new(".env");
-                AccessKey accessKey;
-                if (servicePrincipalKey != null || accessKeyBase64String != null)
-                {
-                    accessKey = AccessKey.CreateFromBase64EncodedAccessKey(accessKeyBase64String);
-                }
-                else if (config.AccessKey != null && config.ServicePrincipalKey != null)
-                {
-                    servicePrincipalKey = config.ServicePrincipalKey;
-                    accessKey = config.AccessKey;
-                }
-                else
-                {
-                    accessKey = null;
-                }
-
-                if (string.IsNullOrEmpty(servicePrincipalKey)) throw new ArgumentNullException(nameof(servicePrincipalKey));
-                if (accessKey == null) throw new ArgumentNullException(nameof(accessKeyBase64String));
-
-                ODataApiClient oDataApiClient = ODataApiClient.CreateFromServicePrincipalKey(
-                    servicePrincipalKey,
-                    config.AccessKey,
-                    scope);
-
-                return oDataApiClient;
+                accessKey = accessKeyBase64String != null ? AccessKey.CreateFromBase64EncodedAccessKey(accessKeyBase64String) : null;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message, "access-key-base64string");
             }
 
+            if (accessKey == null || servicePrincipalKey == null)
+            {
+                ApiClientConfiguration config = new(".env");
+                servicePrincipalKey ??= config.ServicePrincipalKey;
+                accessKey ??= config.AccessKey;
+            }
+
+            if (string.IsNullOrEmpty(servicePrincipalKey)) throw new ArgumentNullException(nameof(servicePrincipalKey));
+            if (accessKey == null) throw new ArgumentNullException(nameof(accessKeyBase64String));
+
+            ODataApiClient oDataApiClient = ODataApiClient.CreateFromServicePrincipalKey(
+                servicePrincipalKey,
+                accessKey,
+                scope);
+
+            return oDataApiClient;
         }
     }
 }
