@@ -39,12 +39,12 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: lookuptables-win-x64
-        path: ${{ github.workspace }}/lf-lookup-tables-cli/LookupTables/bin/Release/net8.0/win-x64/publish/
+        path: ${{ github.workspace }}/LookupTables/bin/Release/net8.0/win-x64/publish/
 
     - name: Upload lookuptables-linux-x64 self contained package
       uses: actions/upload-artifact@v4
       with:
         name: lookuptables-linux-x64
-        path: ${{ github.workspace }}/lf-lookup-tables-cli/LookupTables/bin/Release/net8.0/linux-x64/publish/
+        path: ${{ github.workspace }}/LookupTables/bin/Release/net8.0/linux-x64/publish/
 
   
