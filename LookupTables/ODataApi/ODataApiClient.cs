@@ -133,23 +133,26 @@ namespace Laserfiche.LookupTables.ODataApi
         /// Replaces an existing table with data from a file with supported format.
         /// </summary>
         /// <param name="tableName"></param>
+        /// <param name="filenameWithExtension"></param>
         /// <param name="tableContentStream"></param>
         /// <param name="cancel"></param>
         /// <returns>TaskId</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public async Task<string> ReplaceAllRowsAsync(
           string tableName,
+          string filenameWithExtension,
           Stream tableContentStream,
           CancellationToken cancel = default)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(tableName, nameof(tableName));
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(filenameWithExtension, nameof(filenameWithExtension));
             ArgumentNullException.ThrowIfNull(tableContentStream, nameof(tableContentStream));
             string url = $"table/{Uri.EscapeDataString(tableName)}/ReplaceAllRowsAsync";
 
             using var multipartContent = new MultipartFormDataContent("-N891KdKd7Yk");
             multipartContent.Headers.ContentType.MediaType = "multipart/form-data";
             using var streamContent = new StreamContent(tableContentStream);
-            multipartContent.Add(streamContent, "file", "table.csv");
+            multipartContent.Add(streamContent, "file", filenameWithExtension);
             var httpResponse = await _httpClient.PostAsync(url, multipartContent, cancel);
             httpResponse.EnsureSuccessStatusCode();
             JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonSerializerOptions.Default, cancel);
