@@ -27,7 +27,7 @@ namespace Laserfiche.LookupTables.Commands
            Option<bool> includeColumnsHeaderOption)
         {
             const string commandName = "query-lookup-table";
-            var command = new Command(commandName, "Query a Lookup Table.")
+            var command = new Command(commandName, "Query a Lookup Table and optionally saves the result in a CSV or JSON file.")
                 {
                     tableNameOption,
                     projectScopeOption,

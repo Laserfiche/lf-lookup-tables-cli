@@ -40,12 +40,24 @@ Command line utility to interact with Laserfiche Lookup Tables.
 - Select the required scope(s) in the 'Authentication' tab. For running this sample project, both 'repository.Read' and 'repository.Write' scopes are required.
 - Click on the 'Update scopes' button.
 
-### 3. Clone this repo on your local machine
+## Build and Run this App
 
-### 4. Create a .env file
+To compile, and execute this program which will print out the help documentation in the output window:
+- Open a terminal window.
+- Enter the following commands:
 
-- Using the app picker, go to the 'Repository Administration' page and copy the Repository ID.
-- In the root directory of this project, create a .env file containing the following lines:
+```powershell
+dotnet build
+cd .\LookupTables\
+dotnet run
+```
+
+### Option to store credentials in an .env file
+
+Credentials can be passed in as command line parameters or can be stored in a file named `.env` 
+in the `.\LookupTables` subdirectory of this project.
+The .env file is a text file formatted as follows:
+
 ```
 AUTHORIZATION_TYPE="CLOUD_ACCESS_KEY" 
 
@@ -56,15 +68,3 @@ ACCESS_KEY="<base-64 Access Key string created from step 2>"
 ```
 - **NOTE:** The .env file contains secrets used to set operating system environment variables.
   - DO NOT check-in the .env file in Git.
-
-## Build and Run this App
-
-- Open a terminal window.
-- Enter the following commands:
-
-```
-dotnet build
-dotnet run
-```
-
-These commands will install, compile, and execute this program which will print out the help documentation in the output window.
