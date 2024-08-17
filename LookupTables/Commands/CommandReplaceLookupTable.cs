@@ -47,7 +47,7 @@ namespace Laserfiche.LookupTables.Commands
 
                     using Stream tableCsvStream = File.OpenRead(file);
                     var taskId = await oDataApiClient.ReplaceAllRowsAsync(tableName, tableCsvStream);
-                    TaskProgress taskProgress=null;
+                    TaskProgress taskProgress = null;
                     await oDataApiClient.MonitorTaskAsync(taskId,
                     (progress) =>
                     {
@@ -60,7 +60,7 @@ namespace Laserfiche.LookupTables.Commands
 
                     });
 
-                    Console.WriteLine($"{commandName} {taskProgress.Status}. Task id '{taskId}' completed in {stopwatch.ElapsedMilliseconds}ms.");
+                    Console.WriteLine($"{commandName} {taskProgress?.Status}. Task id '{taskId}' completed in {stopwatch.ElapsedMilliseconds}ms. {taskProgress?.Result.ToString()}");
 
                 }
                 catch (Exception ex)
