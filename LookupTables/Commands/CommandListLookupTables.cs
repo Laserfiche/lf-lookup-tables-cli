@@ -4,25 +4,21 @@
 using Laserfiche.LookupTables.ODataApi;
 using System;
 using System.CommandLine;
+using System.Xml.Linq;
 
 namespace Laserfiche.LookupTables.Commands
 {
-    public class CommandListLookupTables
+    public class CommandListLookupTables : CommandBase
     {
-        public static Command Create(
-           Option<string> projectScopeOption,
-           Option<string> servicePrincipalKeyOption,
-           Option<string> accessKeyBase64StringOption)
+        public CommandListLookupTables() :
+            base("list-lookup-tables",
+                 "Lists all the lookup tables names accessible by the service principal in the provided project scope.")
         {
-            const string commandName = "list-lookup-tables";
-            var command = new Command(commandName, "Lists all the lookup tables names accessible by the service principal in the provided project scope.")
-                {
-                    projectScopeOption,
-                    servicePrincipalKeyOption,
-                    accessKeyBase64StringOption
-                };
+            AddOption(CommandLineOptions.ProjectScopeOption);
+            AddOption(CommandLineOptions.ServicePrincipalKeyOption);
+            AddOption(CommandLineOptions.AccessKeyBase64StringOption);
 
-            command.SetHandler(async (projectScope, servicePrincipalKey, accessKeyBase64String) =>
+            this.SetHandler(async (projectScope, servicePrincipalKey, accessKeyBase64String) =>
             {
                 try
                 {
@@ -31,20 +27,18 @@ namespace Laserfiche.LookupTables.Commands
                     var tableNames = await oDataApiClient.GetLookupTableNamesAsync();
                     foreach (var tableName in tableNames)
                     {
-                        Console.WriteLine(tableName);
+                        ConsoleWriteLine(tableName);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Program.ConsoleWriteError($"{commandName} error: {ex.Message}");
+                    ConsoleWriteError($"{Name} error: {ex.Message}");
                     System.Environment.Exit(1);
                 }
             },
-            projectScopeOption,
-            servicePrincipalKeyOption,
-            accessKeyBase64StringOption);
-
-            return command;
+            CommandLineOptions.ProjectScopeOption,
+            CommandLineOptions.ServicePrincipalKeyOption,
+            CommandLineOptions.AccessKeyBase64StringOption);
         }
     }
 }

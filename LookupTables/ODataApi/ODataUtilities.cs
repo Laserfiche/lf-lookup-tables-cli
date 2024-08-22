@@ -109,7 +109,7 @@ namespace Laserfiche.LookupTables.ODataApi
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(ex.Message, "access-key-base64string");
+                throw new ArgumentException(ex.Message, CommandLineOptions.AccessKeyBase64StringOption.Name);
             }
 
             if (accessKey == null || servicePrincipalKey == null)

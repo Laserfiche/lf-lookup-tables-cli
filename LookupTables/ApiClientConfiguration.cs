@@ -3,6 +3,7 @@
 using Laserfiche.Api.Client.OAuth;
 using System;
 using System.IO;
+using System.Reflection;
 
 namespace Laserfiche.LookupTables
 {
@@ -15,7 +16,7 @@ namespace Laserfiche.LookupTables
         public AccessKey AccessKey { get; set; }
 
         public ApiClientConfiguration(string filename)
-        {            
+        {
             bool dotEnvFileFound = TryLoadFromDotEnv(filename);
 
             // Read credentials from environment variables.
@@ -31,8 +32,7 @@ namespace Laserfiche.LookupTables
         private static bool TryLoadFromDotEnv(string fileName)
         {
             var binFolder = AppDomain.CurrentDomain.BaseDirectory;
-            var projectDir = Directory.GetParent(binFolder)?.Parent?.Parent?.Parent?.FullName;
-            var path = Path.Combine(projectDir, fileName);
+            var path = Path.Combine(binFolder, fileName);
             if (path == null)
             {
                 return false;
