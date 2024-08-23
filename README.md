@@ -13,7 +13,7 @@ User [Documentation](https://developer.laserfiche.com/docs/guides/guide-lookup-t
 
 ## Build and Run this App
 
-To compile, and execute this program which will print out the help documentation in the output window:
+To compile, and execute this program locally:
 - Open a terminal window.
 - Enter the following commands:
 
@@ -22,6 +22,8 @@ dotnet build
 cd .\LookupTables\
 dotnet run
 ```
+
+Running the program prints the help documentation in the output window.
 
 ### Option to store credentials in an .env file
 
