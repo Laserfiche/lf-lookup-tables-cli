@@ -5,13 +5,13 @@ using Laserfiche.Api.Client;
 using Laserfiche.Api.Client.HttpHandlers;
 using Laserfiche.Api.Client.OAuth;
 using Laserfiche.Api.Client.Utils;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -60,7 +60,7 @@ namespace Laserfiche.LookupTables.ODataApi
         {
             var httpResponse = await _httpClient.GetAsync($"/table", cancel);
             httpResponse.EnsureSuccessStatusCode();
-            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
+            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonSerializerOptions.Default, cancel);
             var value = content.RootElement.GetProperty("value");
 
             var tableNames = new List<string>();
@@ -117,7 +117,7 @@ namespace Laserfiche.LookupTables.ODataApi
             {
                 using var httpResponse = await _httpClient.GetAsync(url, cancel);
                 httpResponse.EnsureSuccessStatusCode();
-                JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
+                JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonSerializerOptions.Default, cancel);
                 {
                     foreach (var item in content.RootElement.GetProperty("value").EnumerateArray())
                     {
@@ -133,26 +133,29 @@ namespace Laserfiche.LookupTables.ODataApi
         /// Replaces an existing table with data from a file with supported format.
         /// </summary>
         /// <param name="tableName"></param>
+        /// <param name="filenameWithExtension"></param>
         /// <param name="tableContentStream"></param>
         /// <param name="cancel"></param>
         /// <returns>TaskId</returns>
         /// <exception cref="ArgumentNullException"></exception>
         public async Task<string> ReplaceAllRowsAsync(
           string tableName,
+          string filenameWithExtension,
           Stream tableContentStream,
           CancellationToken cancel = default)
         {
             ArgumentNullException.ThrowIfNullOrWhiteSpace(tableName, nameof(tableName));
+            ArgumentNullException.ThrowIfNullOrWhiteSpace(filenameWithExtension, nameof(filenameWithExtension));
             ArgumentNullException.ThrowIfNull(tableContentStream, nameof(tableContentStream));
             string url = $"table/{Uri.EscapeDataString(tableName)}/ReplaceAllRowsAsync";
 
             using var multipartContent = new MultipartFormDataContent("-N891KdKd7Yk");
             multipartContent.Headers.ContentType.MediaType = "multipart/form-data";
             using var streamContent = new StreamContent(tableContentStream);
-            multipartContent.Add(streamContent, "file", "table.csv");
+            multipartContent.Add(streamContent, "file", filenameWithExtension);
             var httpResponse = await _httpClient.PostAsync(url, multipartContent, cancel);
             httpResponse.EnsureSuccessStatusCode();
-            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(default(JsonSerializerOptions), cancel);
+            JsonDocument content = await httpResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonSerializerOptions.Default, cancel);
             var taskId = content.RootElement.GetStringPropertyValue("taskId");
             return taskId;
         }
@@ -179,7 +182,7 @@ namespace Laserfiche.LookupTables.ODataApi
                 var httpResponse = await _httpClient.GetAsync(url, cancel);
                 httpResponse.EnsureSuccessStatusCode();
                 var body = await httpResponse.Content.ReadAsStringAsync();
-                var taskProgress = JsonConvert.DeserializeObject<TaskProgress>(body);
+                var taskProgress = JsonSerializer.Deserialize<TaskProgress>(body);
                 handleTaskProgress(taskProgress);
 
                 bool done = taskProgress.Status == TaskStatus.Completed || taskProgress.Status == TaskStatus.Failed || taskProgress.Status == TaskStatus.Cancelled;
@@ -193,12 +196,6 @@ namespace Laserfiche.LookupTables.ODataApi
 
     public class TaskProgress
     {
-        [JsonConstructor]
-        public TaskProgress()
-        {
-
-        }
-
         /// <summary>
         /// Task Id.
         /// </summary>
@@ -217,6 +214,7 @@ namespace Laserfiche.LookupTables.ODataApi
         /// <summary>
         /// The status of the task associated with this TaskProgress.
         /// </summary>
+        [JsonConverter(typeof(JsonStringEnumConverter))]
         public TaskStatus Status { get; set; }
 
         /// <summary>
@@ -227,7 +225,7 @@ namespace Laserfiche.LookupTables.ODataApi
         /// <summary>
         /// The result of the execution of the associated task.
         /// </summary>
-        public JsonDocument Result { get; set; }
+        public JsonElement Result { get; set; }
 
         /// <summary>
         /// The time representing when the associated task's execution started.

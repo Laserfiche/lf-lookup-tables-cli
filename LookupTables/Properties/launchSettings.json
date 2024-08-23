@@ -17,7 +17,7 @@
 
     "Command-query-lookup-table": {
       "commandName": "Project",
-      "commandLineArgs": "query-lookup-table --table-name=ALL_DATA_TYPES_TABLE_SAMPLE --project-scope=\"project/Global\" --output-format=csv  --include-columns-header=true --filter=\"numeric lt 999.123\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
+      "commandLineArgs": "query-lookup-table --table-name=ALL_DATA_TYPES_TABLE_SAMPLE --project-scope=\"project/Global\" --output-format=csv --filter=\"numeric lt 999.123\" --file=\"%USERPROFILE%\\Downloads\\Laserfiche-lookup-table.csv\" "
     },
 
     "Command-replace-lookup-table": {

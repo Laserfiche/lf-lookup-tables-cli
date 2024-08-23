@@ -14,40 +14,28 @@ using System.Threading.Tasks;
 
 namespace Laserfiche.LookupTables.Commands
 {
-    public class CommandQueryLookupTable
+    public class CommandQueryLookupTable : CommandBase
     {
-        public static Command Create(
-           Option<string> tableNameOption,
-           Option<string> projectScopeOption,
-           Option<string> fileOption,
-           Option<string> servicePrincipalKeyOption,
-           Option<string> accessKeyBase64StringOption,
-           Option<DataFormat> outputFormatOption,
-           Option<string> filterOption,
-           Option<bool> includeColumnsHeaderOption)
+        public CommandQueryLookupTable() :
+            base("query-lookup-table",
+                 "Query a Lookup Table and optionally saves the result in a CSV or JSON file.")
         {
-            const string commandName = "query-lookup-table";
-            var command = new Command(commandName, "Query a Lookup Table.")
-                {
-                    tableNameOption,
-                    projectScopeOption,
-                    fileOption,
-                    servicePrincipalKeyOption,
-                    accessKeyBase64StringOption,
-                    outputFormatOption,
-                    filterOption,
-                    includeColumnsHeaderOption
-                };
+            AddOption(CommandLineOptions.TableNameOption);
+            AddOption(CommandLineOptions.ProjectScopeOption);
+            AddOption(CommandLineOptions.FileOption);
+            AddOption(CommandLineOptions.ServicePrincipalKeyOption);
+            AddOption(CommandLineOptions.AccessKeyBase64StringOption);
+            AddOption(CommandLineOptions.OutputFormatOption);
+            AddOption(CommandLineOptions.FilterOption);
 
-            command.SetHandler(async (
+            this.SetHandler(async (
                 tableName,
                 projectScope,
                 file,
                 servicePrincipalKey,
                 accessKeyBase64String,
                 outputFormat,
-                filter,
-                includeColumnsHeader) =>
+                filter) =>
             {
                 var stopwatch = Stopwatch.StartNew();
                 int rowCount = 0;
@@ -67,7 +55,8 @@ namespace Laserfiche.LookupTables.Commands
 
                     switch (outputFormat)
                     {
-                        case DataFormat.CSV:
+                        case FileFormat.CSV_NO_HEADER:
+                        case FileFormat.CSV:
                             if (string.IsNullOrWhiteSpace(select))
                             {
                                 IList<string> columnNames = await GetTableColumnNamesExcludingKey(tableName, oDataApiClient);
@@ -79,13 +68,13 @@ namespace Laserfiche.LookupTables.Commands
                                 header = string.Join(ODataUtilities.CSV_COMMA_SEPARATOR, select.Split(ODataUtilities.CSV_COMMA_SEPARATOR).Select(r => r.Trim())) + Environment.NewLine;
                             }
 
-                            if (!includeColumnsHeader)
+                            if (outputFormat == FileFormat.CSV_NO_HEADER)
                                 header = "";
                             footer = "";
                             rowSeparator = Environment.NewLine;
                             jsonElementRowToStringFunc = (jsonElementRow) => jsonElementRow.ToCsv();
                             break;
-                        case DataFormat.JSON:
+                        case FileFormat.JSON:
                             select = null;
                             header = "[" + Environment.NewLine;
                             footer = Environment.NewLine + "]";
@@ -119,24 +108,22 @@ namespace Laserfiche.LookupTables.Commands
 
                     if (outputToFile)
                     {
-                        Console.WriteLine($"{commandName} exported {rowCount} rows in {stopwatch.ElapsedMilliseconds}ms.");
+                        ConsoleWriteLine($"{Name} exported {rowCount} rows in {stopwatch.ElapsedMilliseconds}ms.");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Program.ConsoleWriteError($"{commandName} error{(rowCount > 0 ? " at row: " + rowCount.ToString() : "")}. {ex.Message}");
+                    ConsoleWriteError($"{Name} error{(rowCount > 0 ? " at row: " + rowCount.ToString() : "")}. {ex.Message}");
                     System.Environment.Exit(1);
                 }
             },
-            tableNameOption,
-            projectScopeOption,
-            fileOption,
-            servicePrincipalKeyOption,
-            accessKeyBase64StringOption,
-            outputFormatOption,
-            filterOption,
-            includeColumnsHeaderOption);
-            return command;
+            CommandLineOptions.TableNameOption,
+            CommandLineOptions.ProjectScopeOption,
+            CommandLineOptions.FileOption,
+            CommandLineOptions.ServicePrincipalKeyOption,
+            CommandLineOptions.AccessKeyBase64StringOption,
+            CommandLineOptions.OutputFormatOption,
+            CommandLineOptions.FilterOption);
         }
 
         private static async Task<IList<string>> GetTableColumnNamesExcludingKey(string tableName, ODataApiClient oDataApiClient)
