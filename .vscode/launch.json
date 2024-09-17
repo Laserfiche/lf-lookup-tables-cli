@@ -2,11 +2,23 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "LookupTables.exe -?",
+            "name": "LookupTables.exe list-lookup-tables --project-scope=\"project/Global\"",
+            "args": "list-lookup-tables --project-scope=\"project/Global\"",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net8.0/LookupTables.exe",
+            "program": "${workspaceFolder}/LookupTables/bin/Debug/net8.0/LookupTables.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "LookupTables.exe -?",
+            "args": "-?",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/LookupTables/bin/Debug/net8.0/LookupTables.exe",            
             "cwd": "${workspaceFolder}",
             "console": "internalConsole",
             "stopAtEntry": false
@@ -20,7 +32,7 @@
             "name": "C#: LookupTables [Default Configuration]",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\LookupTables.csproj",
+            "projectPath": "${workspaceFolder}/LookupTables/LookupTables.csproj",
         }
     ]
 }
