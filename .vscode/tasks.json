@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/LookupTables.csproj",
+                "${workspaceFolder}/LookupTables/LookupTables.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/LookupTables.csproj",
+                "${workspaceFolder}/LookupTables/LookupTables.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/LookupTables.csproj"
+                "${workspaceFolder}/LookupTablescd/LookupTables.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
