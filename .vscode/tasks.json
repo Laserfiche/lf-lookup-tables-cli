@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/LookupTablescd/LookupTables.csproj"
+                "${workspaceFolder}/LookupTables/LookupTables.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
